@@ -1,29 +1,25 @@
 // public/script.js
-const startButton = document.getElementById('startTestButton');
-const resultsDiv = document.getElementById('results');
-const ipDetailsContainer = document.getElementById('ipDetailsContainer');
-const dnsServersContainer = document.getElementById('dnsServersContainer');
-const conclusionContainer = document.getElementById('conclusionContainer');
-const statusMessageParagraph = resultsDiv.querySelector('p.status-message');
+// ... (keep existing const declarations for elements) ...
 
 startButton.addEventListener('click', async () => {
+    // Clear previous results
     ipDetailsContainer.innerHTML = ''; 
     dnsServersContainer.innerHTML = '';
     conclusionContainer.innerHTML = '';
-    statusMessageParagraph.textContent = 'Starting Test...';
+    statusMessageParagraph.textContent = 'Initializing Test Sequence...'; // Updated
     startButton.disabled = true;
 
     try {
         console.log("[Frontend] Calling /api/initiate-dns-test");
-        const initiateResponse = await fetch('/api/initiate-dns-test');
-        if (!initiateResponse.ok) { /* ... error handling ... */ }
+        statusMessageParagraph.textContent = 'Requesting test parameters...'; // Update
+        const initiateResponse = await fetch('/api/initiate-dns-test'); 
+        if (!initiateResponse.ok) { /* ... same error handling ... */ }
         const testParams = await initiateResponse.json();
-        
         const leak_id = testParams.leak_id;
         const hostnames_to_ping = testParams.hostnames_to_ping;
-        const client_ip_info = testParams.client_ip_info; // Get client IP info here
+        const client_ip_info = testParams.client_ip_info;
 
-        if (!leak_id || !hostnames_to_ping || hostnames_to_ping.length === 0) { /* ... error ... */ }
+        if (!leak_id || !hostnames_to_ping || hostnames_to_ping.length === 0) { /* ... same error ... */ }
         
         // Display Client IP Info Immediately
         if (client_ip_info) {
@@ -37,55 +33,60 @@ startButton.addEventListener('click', async () => {
         }
 
         console.log("[Frontend] Received leak_id:", leak_id, "Hostnames:", hostnames_to_ping);
-        statusMessageParagraph.textContent = `Performing ${hostnames_to_ping.length} DNS lookups (pings to bash.ws)...`;
+        statusMessageParagraph.textContent = `Performing ${hostnames_to_ping.length} DNS lookups (pings to bash.ws)... This may take a few seconds.`; // Update
 
-        const pingPromises = hostnames_to_ping.map(hostname => { /* ... same ping logic ... */ 
-             const img = new Image();
-             img.src = `http://${hostname}/z.gif?r=${Math.random()}`; 
-             console.log(`[Frontend] Triggering DNS lookup for: ${hostname}`);
-             return new Promise(resolve => {
-                 let resolved = false;
-                 img.onload = img.onerror = () => {
-                     if (!resolved) { resolved = true; resolve({hostname, status: 'attempted'}); }
-                 };
-                 setTimeout(() => { 
-                     if (!resolved) { resolved = true; resolve({hostname, status: 'timeout_fallback'}); }
-                 }, 1500); 
-             });
-        });
+        const pingPromises = hostnames_to_ping.map(hostname => { /* ... same ping logic ... */ });
         await Promise.allSettled(pingPromises);
 
         console.log("[Frontend] All DNS lookup triggers attempted.");
-        statusMessageParagraph.textContent = 'Fetching DNS leak results from bash.ws... (may take up to 10-15s)';
+        statusMessageParagraph.textContent = 'Fetching DNS leak results from bash.ws... (Please wait, this can take 10-15 seconds)'; // Update & add patience
+        
         await new Promise(resolve => setTimeout(resolve, 10000)); 
 
         console.log(`[Frontend] Calling /api/fetch-dns-results for leak_id: ${leak_id}`);
         const resultsResponse = await fetch(`/api/fetch-dns-results?leak_id=${leak_id}`);
-        if (!resultsResponse.ok) { /* ... error handling ... */ }
-        const dnsResultsData = await resultsResponse.json(); // Now contains { dns_servers: [], conclusion: "" }
+        if (!resultsResponse.ok) { /* ... same error handling ... */ }
+        const dnsResultsData = await resultsResponse.json(); 
         console.log("[Frontend] DNS Leak Results received:", dnsResultsData);
 
-        statusMessageParagraph.textContent = 'Test Complete!';
-        // ipDetailsContainer is already populated
-        dnsServersContainer.innerHTML = ''; // Clear just in case
-        conclusionContainer.innerHTML = '';
+        statusMessageParagraph.textContent = 'Test Complete!'; // Final status before showing results
+        
+        // IP Details already shown
+        // dnsServersContainer.innerHTML = ''; // Already cleared at the top
+        // conclusionContainer.innerHTML = ''; // Already cleared at the top
         
         if (dnsResultsData.dns_servers && dnsResultsData.dns_servers.length > 0) {
             const dnsHeader = document.createElement('h3');
             dnsHeader.textContent = `Your DNS requests originate from ${dnsResultsData.dns_servers.length} server(s):`;
             dnsServersContainer.appendChild(dnsHeader);
-            dnsResultsData.dns_servers.forEach(server => { /* ... display each DNS server ... */ 
-                 const entryDiv = document.createElement('div');
-                 entryDiv.className = 'info-entry';
-                 entryDiv.innerHTML = `<div><strong>IP Address:</strong> <span>${server.ip || 'N/A'}</span></div>
-                                      <div><strong>Provider:</strong> <span>${server.isp || 'N/A'}</span></div>
-                                      <div><strong>Location:</strong> <span>${server.city || 'N/A'}, ${server.country || 'N/A'}</span></div>`;
-                 dnsServersContainer.appendChild(entryDiv);
+
+            dnsResultsData.dns_servers.forEach(server => { /* ... same DNS server display logic ... */ 
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'info-entry';
+                entryDiv.innerHTML = `<div><strong>IP Address:</strong> <span>${server.ip || 'N/A'}</span></div>
+                                     <div><strong>Provider:</strong> <span>${server.isp || 'N/A'}</span></div>
+                                     <div><strong>Location:</strong> <span>${server.city || 'N/A'}, ${server.country || 'N/A'}</span></div>`;
+                dnsServersContainer.appendChild(entryDiv);
             });
-        } else { /* ... no DNS servers message ... */ }
+        } else {
+             dnsServersContainer.innerHTML = '<h3>Detected DNS Servers:</h3><div class="info-entry"><span>No leaking DNS servers detected by bash.ws or an error occurred.</span></div>';
+        }
 
-        if (dnsResultsData.conclusion) { /* ... display conclusion ... */ }
+        if (dnsResultsData.conclusion) {
+            const conclusionDiv = document.createElement('div');
+            // conclusionDiv.className = 'info-entry'; // Keep this if you want the box style
+            conclusionDiv.innerHTML = `<h3>Conclusion from bash.ws:</h3><p style="font-style: italic;">${dnsResultsData.conclusion}</p>`; // Display as paragraph
+            conclusionContainer.appendChild(conclusionDiv);
+        } else {
+            conclusionContainer.innerHTML = '<h3>Conclusion from bash.ws:</h3><p style="font-style: italic;">No specific conclusion provided.</p>';
+        }
 
-    } catch (error) { /* ... error handling ... */ } 
-    finally { startButton.disabled = false; }
+    } catch (error) { 
+        console.error("[Frontend] Full Test Error:", error);
+        statusMessageParagraph.textContent = `Error: ${error.message}. Check browser console.`;
+        // Optionally display the error more prominently in the results area too
+        ipDetailsContainer.innerHTML = `<div class="info-entry" style="border-left-color: red;"><strong>Test Failed:</strong> <span>${error.message}</span></div>`;
+    } finally { 
+        startButton.disabled = false; 
+    }
 });
