@@ -1,20 +1,22 @@
 [build]
-  # This tells Netlify that the root of your repo is the publish directory.
-  # Netlify will then automatically serve files from a "public" folder 
-  # (if it exists at this root) as if they are at the root URL path.
   publish = "." 
-  functions = "netlify/functions" # Specifies your functions directory
+  functions = "netlify/functions"
 
-# This rule ensures that if someone requests /script.js,
-# Netlify serves the file from /public/script.js.
-# The status = 200 makes it a rewrite (serves the content without changing URL).
+# Global headers for all function responses
+[[headers]]
+  for = "/.netlify/functions/*" # Applies to all your functions
+  [headers.values]
+    Access-Control-Allow-Origin = "*" # Or "https://www.peekmyip.com"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+
+# Redirects/Rewrites (from previous successful setup for static files)
 [[redirects]]
   from = "/script.js"
-  to = "/public/script.js"
+  to = "/public/script.js" # Assuming you still have a public/script.js in dnsleak-tester for a direct Netlify site version
   status = 200 
 
-# This rule ensures API calls are routed to your Netlify Functions
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat" # :splat captures the wildcard part
+  from = "/api/*" # If your blogspot script calls /api/ path
+  to = "/.netlify/functions/:splat"
   status = 200
