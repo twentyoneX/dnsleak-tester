@@ -39,7 +39,7 @@ startButton.addEventListener('click', async () => {
         await Promise.allSettled(pingPromises);
 
         console.log("[Frontend] All DNS lookup triggers attempted.");
-        statusMessageParagraph.textContent = 'Fetching DNS leak results from bash.ws... (Please wait, this can take 10-15 seconds)'; // Update & add patience
+        statusMessageParagraph.textContent = 'Fetching DNS leak results from ... (Please wait, this can take 10-15 seconds)'; // Update & add patience
         
         await new Promise(resolve => setTimeout(resolve, 10000)); 
 
