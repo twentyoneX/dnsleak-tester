@@ -1,47 +1,51 @@
-// netlify/functions/initiate-dns-test.js (CommonJS - SIMPLIFIED)
+// netlify/functions/initiate-dns-test.js (CommonJS - Returns client IP from header)
 exports.handler = async (event, context) => {
-    const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS' // Only GET needed for this one now
-    };
+    const corsHeaders = { /* ... CORS headers ... */ };
+    if (event.httpMethod === 'OPTIONS') { /* ... OPTIONS handling ... */ }
 
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 204, headers: corsHeaders, body: '' };
-    }
+    // Get client IP from Netlify headers
+    const clientIp = event.headers['x-nf-client-connection-ip'] || 
+                     (event.multiValueHeaders && event.multiValueHeaders['x-nf-client-connection-ip'] ? event.multiValueHeaders['x-nf-client-connection-ip'][0] : null) ||
+                     'Client IP N/A'; 
+    let clientIpInfo = { ip: clientIp, isp: 'N/A', country: 'N/A', city: 'N/A' };
 
     try {
-        const leak_id = "id" + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 8);
-        const baseTestDomain = "bash.ws"; 
-
-        console.log(`[Netlify initiate-dns-test] Generated leak_id: ${leak_id}`);
-
-        const hostnames_to_ping = [];
-        for (let i = 0; i < 10; i++) { 
-            hostnames_to_ping.push(`${i}.${leak_id}.${baseTestDomain}`);
+        // Optionally, enrich this clientIp with a GeoIP API call here if you want
+        // For now, just use the IP directly
+        if (clientIp !== 'Client IP N/A' && clientIp !== '127.0.0.1') {
+            // Example: Call Mullvad API for THIS clientIp
+            const mullvadResponse = await fetch(`https://am.i.mullvad.net/json?ip=${clientIp}`);
+            if (mullvadResponse.ok) {
+                const mullvadData = await mullvadResponse.json();
+                clientIpInfo = {
+                    ip: clientIp, // Use the IP from Netlify header
+                    isp: mullvadData.organization || 'N/A',
+                    country: mullvadData.country || 'N/A',
+                    city: mullvadData.city || 'N/A'
+                };
+            }
         }
-        
-        // Optional: "Warm up" or "register" the test with bash.ws
-        try {
-            const registerUrl = `https://bash.ws/dnsleak/test/${leak_id}?json&delete=1`; 
-            await fetch(registerUrl); 
-            console.log(`[Netlify initiate-dns-test] Initial registration call to ${registerUrl} made.`);
-        } catch (e) {
-            console.warn("[Netlify initiate-dns-test] Optional registration call to bash.ws failed, continuing...", e.message);
-        }
-
-        console.log("[Netlify initiate-dns-test] Hostnames to ping count:", hostnames_to_ping.length);
-        return {
-            statusCode: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            body: JSON.stringify({ leak_id: leak_id, hostnames_to_ping })
-        };
-    } catch (error) {
-        console.error("[Netlify initiate-dns-test] Error:", error.message, error.stack);
-        return { 
-            statusCode: 500, 
-            headers: corsHeaders,
-            body: JSON.stringify({ error: "Failed to initiate DNS leak test.", details: error.message }) 
-        };
+    } catch(e) {
+        console.error("Error fetching GeoIP for client IP in initiate-dns-test:", e.message);
     }
+
+    // ... (rest of the leak_id and hostnames_to_ping generation remains the same) ...
+    const leak_id = "id" + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 8);
+    const baseTestDomain = "bash.ws";
+    const hostnames_to_ping = [];
+    for (let i = 0; i < 10; i++) { hostnames_to_ping.push(`${i}.${leak_id}.${baseTestDomain}`); }
+    try {
+        const registerUrl = `https://bash.ws/dnsleak/test/${leak_id}?json&delete=1`; 
+        await fetch(registerUrl); 
+    } catch (e) { /* ... */ }
+
+    return {
+        statusCode: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            leak_id: leak_id, 
+            hostnames_to_ping,
+            your_public_ip_information: clientIpInfo // Key name changed for clarity
+        })
+    };
 };
