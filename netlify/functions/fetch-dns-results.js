@@ -16,7 +16,7 @@ exports.handler = async (event, context) => {
         try { parsedDataFromBashWS = JSON.parse(responseText); } 
         catch (e) { /* ... error handling ... */ }
 
-        console.log("[Netlify fetch-dns-results] Data from bash.ws (first 500 chars):", JSON.stringify(parsedDataFromBashWS, null, 2).substring(0, 500) + "...");
+        console.log("[Netlify fetch-dns-results] Data from (first 500 chars):", JSON.stringify(parsedDataFromBashWS, null, 2).substring(0, 500) + "...");
 
         const results = {
             // No your_ip_info from here anymore
