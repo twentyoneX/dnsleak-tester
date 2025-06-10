@@ -7,11 +7,7 @@ exports.handler = async (event, context) => {
     };
 
     if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 204,
-            headers: corsHeaders,
-            body: ''
-        };
+        return { statusCode: 204, headers: corsHeaders, body: '' };
     }
 
     if (event.httpMethod === 'GET') {
@@ -53,7 +49,7 @@ exports.handler = async (event, context) => {
             console.log("[Netlify fetch-dns-results] Data from bash.ws (first 500 chars):", JSON.stringify(parsedDataFromBashWS, null, 2).substring(0, 500) + "...");
 
             const results = {
-                your_ip_info: null, // This will be filled by the type "ip" entry from bash.ws
+                your_ip_info: null, 
                 dns_servers: [],
                 conclusion: null
             };
@@ -65,7 +61,6 @@ exports.handler = async (event, context) => {
                         return; 
                     }
                     if (item.type === "ip") {
-                        // This IP is the IP of the Netlify function as seen by bash.ws
                         results.your_ip_info = {
                             ip: item.ip || 'N/A',
                             isp: item.asn || 'N/A', 
@@ -80,7 +75,7 @@ exports.handler = async (event, context) => {
                             city: item.city_name || 'N/A' 
                         });
                     } else if (item.type === "conclusion") {
-                        results.conclusion = item.ip; // 'ip' field in conclusion type holds the text
+                        results.conclusion = item.ip; 
                     }
                 });
             } else {
@@ -106,7 +101,7 @@ exports.handler = async (event, context) => {
     
     console.log(`[Netlify fetch-dns-results] Method Not Allowed: ${event.httpMethod}`);
     return {
-        statusCode: 405, // Method Not Allowed
+        statusCode: 405, 
         headers: corsHeaders,
         body: JSON.stringify({ error: `HTTP method ${event.httpMethod} not allowed.`})
     };
