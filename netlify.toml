@@ -2,12 +2,15 @@
   publish = "." 
   functions = "netlify/functions"
 
-# This helps ensure /api/ routes work if you also want to test your Netlify site directly
-# And also helps with global CORS header enforcement if needed, though functions should handle it.
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*" 
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization" 
+
 [[redirects]]
-  from = "/api/*"
+  from = "/api/*" # Optional: for calling functions via /api/ if you visit Netlify site directly
   to = "/.netlify/functions/:splat"
   status = 200
-  force = true # Ensures this rule applies even if a static file/folder named 'api' existed
-  # You can also add headers here as a fallback, but the functions should do it.
-  # headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, OPTIONS", Access-Control-Allow-Headers = "Content-Type"}
+  force = true
