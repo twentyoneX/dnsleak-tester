@@ -1,17 +1,18 @@
 [build]
-  publish = "." # Serves index.html from root, and public/* from /
+  publish = "." # If you also want to serve static files from this Netlify site's root
   functions = "netlify/functions"
 
+# Apply these headers to ALL responses from function invocations
 [[headers]]
-  for = "/.netlify/functions/*"
+  for = "/.netlify/functions/*" # This targets the actual function execution path
   [headers.values]
-    Access-Control-Allow-Origin = "*" 
+    Access-Control-Allow-Origin = "*" # Or your Blogspot domain
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Headers = "Content-Type, Authorization" # Add more if needed
 
-[[redirects]] # If your script.js directly calls /api/*
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-  force = true
-# No specific redirect needed for script.js if publish = "." handles public/ correctly
+# Optional: If you also want /api/* aliases for your functions
+# [[redirects]]
+#   from = "/api/*"
+#   to = "/.netlify/functions/:splat"
+#   status = 200
+#   force = true # Important if you have conflicting static files
