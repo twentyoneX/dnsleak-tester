@@ -2,11 +2,12 @@
 exports.handler = async (event, context) => {
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*', 
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
     };
 
     if (event.httpMethod === 'OPTIONS') {
+        console.log("[Netlify fetch-dns-results] Handling OPTIONS preflight.");
         return { statusCode: 204, headers: corsHeaders, body: '' };
     }
 
@@ -62,17 +63,13 @@ exports.handler = async (event, context) => {
                     }
                     if (item.type === "ip") {
                         results.your_ip_info = {
-                            ip: item.ip || 'N/A',
-                            isp: item.asn || 'N/A', 
-                            country: item.country_name || 'N/A',
-                            city: item.city_name || 'N/A' 
+                            ip: item.ip || 'N/A', isp: item.asn || 'N/A', 
+                            country: item.country_name || 'N/A', city: item.city_name || 'N/A' 
                         };
                     } else if (item.type === "dns") {
                         results.dns_servers.push({
-                            ip: item.ip || 'N/A',
-                            isp: item.asn || 'N/A',
-                            country: item.country_name || 'N/A',
-                            city: item.city_name || 'N/A' 
+                            ip: item.ip || 'N/A', isp: item.asn || 'N/A',
+                            country: item.country_name || 'N/A', city: item.city_name || 'N/A' 
                         });
                     } else if (item.type === "conclusion") {
                         results.conclusion = item.ip; 
