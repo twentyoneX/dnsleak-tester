@@ -1,28 +1,17 @@
 [build]
-  publish = "." # Your static files (index.html, public/) are in the root
+  publish = "." # Serves index.html from root, and public/* from /
   functions = "netlify/functions"
 
-# Apply these headers to ALL responses from function invocations
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
-    Access-Control-Allow-Origin = "*" # Or be specific: "https://your-blogspot-domain.com"
+    Access-Control-Allow-Origin = "*" 
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization" 
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
 
-# Rewrite /api/* calls to Netlify functions. 
-# This is if your JavaScript calls /api/initiate-dns-test.
-# If your JS calls /.netlify/functions/initiate-dns-test directly, this is less critical
-# but doesn't hurt to have for direct access to your Netlify site.
-[[redirects]]
+[[redirects]] # If your script.js directly calls /api/*
   from = "/api/*"
   to = "/.netlify/functions/:splat"
-  status = 200 # This makes it a rewrite (function invocation)
-  force = true # Make sure this applies
-
-# Redirect for script.js (if needed, publish = "." should handle public/ too)
-# This might be redundant if publish = "." correctly maps public/ to /
-# [[redirects]]
-#   from = "/script.js"
-#   to = "/public/script.js"
-#   status = 200
+  status = 200
+  force = true
+# No specific redirect needed for script.js if publish = "." handles public/ correctly
