@@ -2,19 +2,24 @@
   publish = "." 
   functions = "netlify/functions"
 
-# Apply these headers to ALL responses from function invocations
-# This should handle OPTIONS preflight and add headers to actual GET/POST responses
-[[headers]]
-  for = "/.netlify/functions/*" 
-  [headers.values]
-    Access-Control-Allow-Origin = "*" 
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization" # Add any other custom headers your client might send
-
-# Optional: If you also want /api/* aliases for your functions when visiting leaking-dns.netlify.app directly
-# This rule is NOT strictly necessary for the Blogspot integration if Blogspot calls the full /.netlify/functions/ path
+# Redirect /api/* calls to Netlify functions
+# AND apply CORS headers to these /api/* paths
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
-  status = 200 # This makes it a rewrite
+  status = 200 # This makes it a rewrite (function invocation)
   force = true 
+  # Headers for both OPTIONS preflight and actual GET/POST responses via /api/
+  [redirects.headers]
+    Access-Control-Allow-Origin = "*" 
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization" 
+
+# Fallback for any OPTIONS request to the actual function path,
+# though the /api/* rule should catch most.
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
