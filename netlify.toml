@@ -2,22 +2,15 @@
   publish = "." 
   functions = "netlify/functions"
 
-# Apply these headers to ALL responses from function invocations via /api/ path
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200 
-  force = true 
-  # Headers for both OPTIONS preflight and actual GET/POST responses via /api/
-  [redirects.headers]
-    Access-Control-Allow-Origin = "*" 
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With" # Added common headers
-
-# Fallback headers for direct calls to /.netlify/functions/* (belt and suspenders)
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*" 
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200 
+  force = true 
