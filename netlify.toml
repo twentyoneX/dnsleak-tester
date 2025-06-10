@@ -1,33 +1,28 @@
 [build]
-  publish = "." 
+  publish = "." # Your static files (index.html, public/) are in the root
   functions = "netlify/functions"
 
-# Handle preflight OPTIONS requests for all functions
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat" # Pass through, but headers below will apply
-  status = 200 # Must be 200 for OPTIONS preflight
-  force = true # Ensure this rule is applied
-  # Headers for the OPTIONS preflight response
-  [redirects.headers]
-    Access-Control-Allow-Origin = "*" # Or "https://www.peekmyip.com"
+# Apply these headers to ALL responses from function invocations
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*" # Or be specific: "https://your-blogspot-domain.com"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization" # Add any other headers your client might send
+    Access-Control-Allow-Headers = "Content-Type, Authorization" 
 
-# Handle actual function calls (GET, POST etc.)
+# Rewrite /api/* calls to Netlify functions. 
+# This is if your JavaScript calls /api/initiate-dns-test.
+# If your JS calls /.netlify/functions/initiate-dns-test directly, this is less critical
+# but doesn't hurt to have for direct access to your Netlify site.
 [[redirects]]
-  from = "/api/*" # If your JS calls /api/ paths
+  from = "/api/*"
   to = "/.netlify/functions/:splat"
-  status = 200 # Rewrite to function
-  force = true
-  # Headers for the actual GET/POST response from the function
-  [redirects.headers]
-    Access-Control-Allow-Origin = "*" # Or "https://www.peekmyip.com"
-    # Content-Type will be set by your function
+  status = 200 # This makes it a rewrite (function invocation)
+  force = true # Make sure this applies
 
-# This rule ensures that if someone requests /script.js,
-# Netlify serves the file from /public/script.js.
-[[redirects]]
-  from = "/script.js"
-  to = "/public/script.js"
-  status = 200 
+# Redirect for script.js (if needed, publish = "." should handle public/ too)
+# This might be redundant if publish = "." correctly maps public/ to /
+# [[redirects]]
+#   from = "/script.js"
+#   to = "/public/script.js"
+#   status = 200
