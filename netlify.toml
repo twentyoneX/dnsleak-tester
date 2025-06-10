@@ -1,18 +1,13 @@
 [build]
-  publish = "." # If you also want to serve static files from this Netlify site's root
+  publish = "." 
   functions = "netlify/functions"
 
-# Apply these headers to ALL responses from function invocations
-[[headers]]
-  for = "/.netlify/functions/*" # This targets the actual function execution path
-  [headers.values]
-    Access-Control-Allow-Origin = "*" # Or your Blogspot domain
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization" # Add more if needed
-
-# Optional: If you also want /api/* aliases for your functions
-# [[redirects]]
-#   from = "/api/*"
-#   to = "/.netlify/functions/:splat"
-#   status = 200
-#   force = true # Important if you have conflicting static files
+# This helps ensure /api/ routes work if you also want to test your Netlify site directly
+# And also helps with global CORS header enforcement if needed, though functions should handle it.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true # Ensures this rule applies even if a static file/folder named 'api' existed
+  # You can also add headers here as a fallback, but the functions should do it.
+  # headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "GET, POST, OPTIONS", Access-Control-Allow-Headers = "Content-Type"}
