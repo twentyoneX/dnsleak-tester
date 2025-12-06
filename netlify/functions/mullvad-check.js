@@ -1,5 +1,4 @@
 exports.handler = async function(event, context) {
-  // Add CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -7,7 +6,6 @@ exports.handler = async function(event, context) {
     'Content-Type': 'application/json'
   };
 
-  // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -17,7 +15,6 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    // Fetch from Mullvad API
     const response = await fetch('https://am.i.mullvad.net/json');
     
     if (!response.ok) {
@@ -46,14 +43,17 @@ exports.handler = async function(event, context) {
 };
 ```
 
-## Step 2: Deploy to Netlify
+**Common issues that cause this error:**
+1. Missing closing braces `}`
+2. Missing semicolons `;`
+3. Incomplete code copy/paste
 
-1. Add this file to your repository
-2. Push to your repository
-3. Netlify will automatically deploy the function
+**To fix:**
+1. Delete the current `mullvad-check.js` file
+2. Create a new file with the exact code above
+3. Make sure ALL the code is there from the first line to the last closing brace
+4. Push to GitHub
 
-## Step 3: Test the Function
-
-Once deployed, test it directly:
+After pushing, wait about 1-2 minutes for Netlify to rebuild, then test again at:
 ```
 https://dnsleak.netlify.app/.netlify/functions/mullvad-check
